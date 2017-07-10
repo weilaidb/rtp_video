@@ -255,12 +255,15 @@ int main()
             rtp_hdr->marker=1;
             rtp_hdr->seq_no = htons(seq_num ++); //序列号，每发送一个RTP包增1
             ts_current=ts_current+timestamp_increse;
+            mlog_msgbyfunc(&ts_current,sizeof(ts_current), "print ts_current ");
             rtp_hdr->timestamp=htonl(ts_current);
+            mlog_msgbyfunc(rtp_hdr,sizeof(*rtp_hdr), "print  rtp_hdr ");
             //设置NALU HEADER,并将这个HEADER填入sendbuf[12]
             nalu_hdr =(NALU_HEADER*)&sendbuf[12]; //将sendbuf[12]的地址赋给nalu_hdr，之后对nalu_hdr的写入就将写入sendbuf中；
             nalu_hdr->F=n->forbidden_bit;
             nalu_hdr->NRI=n->nal_reference_idc>>5;//有效数据在n->nal_reference_idc的第6，7位，需要右移5位才能将其值赋给nalu_hdr->NRI。
             nalu_hdr->TYPE=n->nal_unit_type;
+            mlog_msgbyfunc(nalu_hdr,sizeof(*nalu_hdr), "print  nalu_hdr ");
 
             memcpy(&sendbuf[13],n->buf+1,n->len-1);//去掉nalu头的nalu剩余内容写入sendbuf[13]开始的字符串。
             bytes=n->len + 12 ;  //获得sendbuf的长度,为nalu的长度（包含NALU头但除去起始前缀）加上rtp_header的固定长度12字节
@@ -288,6 +291,7 @@ int main()
             int packetIndex = 1 ;
 
             ts_current=ts_current+timestamp_increse;
+            mlog_msgbyfunc(&ts_current,sizeof(ts_current), "print ts_current ");
             rtp_hdr->timestamp=htonl(ts_current);
 
             //发送第一个的FU，S=1，E=0，R=0
@@ -299,6 +303,8 @@ int main()
             fu_ind->F=n->forbidden_bit;
             fu_ind->NRI=n->nal_reference_idc>>5;
             fu_ind->TYPE=28;//使用FU-A
+            mlog_msgbyfunc(rtp_hdr,sizeof(*rtp_hdr), "print  rtp_hdr ");
+            mlog_msgbyfunc(fu_ind,sizeof(*fu_ind), "print  fu_ind ");
 
             //设置FU HEADER,并将这个HEADER填入sendbuf[13]
             fu_hdr =(FU_HEADER*)&sendbuf[13];
@@ -306,6 +312,7 @@ int main()
             fu_hdr->E=0;
             fu_hdr->R=0;
             fu_hdr->TYPE=n->nal_unit_type;
+            mlog_msgbyfunc(fu_hdr,sizeof(*fu_hdr), "print  fu_hdr ");
 
             memcpy(&sendbuf[14],n->buf+1,MAX_RTP_PKT_LENGTH);//去掉NALU头
             bytes=MAX_RTP_PKT_LENGTH+14;//获得sendbuf的长度,为nalu的长度（除去起始前缀和NALU头）加上rtp_header，fu_ind，fu_hdr的固定长度14字节
@@ -319,11 +326,13 @@ int main()
 
                 //设置rtp M 位；
                 rtp_hdr->marker=0;
+                mlog_msgbyfunc(rtp_hdr,sizeof(*rtp_hdr), "print  rtp_hdr ");
                 //设置FU INDICATOR,并将这个HEADER填入sendbuf[12]
                 fu_ind =(FU_INDICATOR*)&sendbuf[12]; //将sendbuf[12]的地址赋给fu_ind，之后对fu_ind的写入就将写入sendbuf中；
                 fu_ind->F=n->forbidden_bit;
                 fu_ind->NRI=n->nal_reference_idc>>5;
                 fu_ind->TYPE=28;
+                mlog_msgbyfunc(fu_ind,sizeof(*fu_ind), "print  fu_ind ");
 
                 //设置FU HEADER,并将这个HEADER填入sendbuf[13]
                 fu_hdr =(FU_HEADER*)&sendbuf[13];
@@ -331,6 +340,7 @@ int main()
                 fu_hdr->E=0;
                 fu_hdr->R=0;
                 fu_hdr->TYPE=n->nal_unit_type;
+                mlog_msgbyfunc(fu_hdr,sizeof(*fu_hdr), "print  fu_hdr ");
 
                 memcpy(&sendbuf[14],n->buf+(packetIndex-1)*MAX_RTP_PKT_LENGTH+1,MAX_RTP_PKT_LENGTH);//去掉起始前缀的nalu剩余内容写入sendbuf[14]开始的字符串。
                 bytes=MAX_RTP_PKT_LENGTH+14;//获得sendbuf的长度,为nalu的长度（除去原NALU头）加上rtp_header，fu_ind，fu_hdr的固定长度14字节
