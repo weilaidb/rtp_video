@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <winsock2.h>
 #include "h264.h"
+#include "mlog_init.h"
 
 
 typedef struct
@@ -201,7 +202,8 @@ void dump(NALU_t *n)
 
 int main()
 {
-    OpenBitstreamFile("480320.264");
+//    OpenBitstreamFile("480320.264");
+    OpenBitstreamFile("176144.264");
     NALU_t *n;
     char sendbuf[1500];
 
@@ -220,12 +222,19 @@ int main()
     sockfd=socket(AF_INET,SOCK_DGRAM,0);
     connect(sockfd, (const sockaddr *)&addr_in, sizeof(sockaddr_in)) ;//申请UDP套接字
     n = AllocNALU(8000000);//为结构体nalu_t及其成员buf分配空间。返回值为指向nalu_t存储空间的指针
+    mlog_msgbyfunc(n, sizeof(*n), "print AllocNALU things");
+    showmlogkeys();
+    showmlogbyname("func_main");
+
+//    return 0;
 
     while(!feof(bits))
     {
         GetAnnexbNALU(n);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
         dump(n);//输出NALU长度和TYPE
-
+        mlog_msgbyfunc(n, sizeof(*n), "print AllocNALU things");
+//        showmlogbyname("func_main");
+//        Sleep(10000);
         memset(sendbuf,0,1500);//清空sendbuf；此时会将上次的时间戳清空，因此需要ts_current来保存上次的时间戳值
 
         //rtp固定包头，为12字节,该句将sendbuf[0]的地址赋给rtp_hdr，以后对rtp_hdr的写入操作将直接写入sendbuf。
@@ -352,5 +361,7 @@ int main()
 #ifdef WIN32
     WSACleanup();
 #endif // WIN32
+
+    savemlog2fileall("./func_main.info.log");
     return 0;
 }

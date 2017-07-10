@@ -9,7 +9,13 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    mlog_init.cpp \
+    memorylog.cpp
 
-LIBS += -lWs2_32
+LIBS += -lWs2_32 -lpthread
+
+HEADERS += \
+    mlog_init.h \
+    memorylog.h
 
