@@ -233,12 +233,14 @@ int main()
         GetAnnexbNALU(n);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
         dump(n);//输出NALU长度和TYPE
         mlog_msgbyfunc(n, sizeof(*n), "print AllocNALU things");
+        mlog_msgbyfunc(n->buf, n->len, "print NALU buffer");
 //        showmlogbyname("func_main");
 //        Sleep(10000);
         memset(sendbuf,0,1500);//清空sendbuf；此时会将上次的时间戳清空，因此需要ts_current来保存上次的时间戳值
 
         //rtp固定包头，为12字节,该句将sendbuf[0]的地址赋给rtp_hdr，以后对rtp_hdr的写入操作将直接写入sendbuf。
         rtp_hdr =(RTP_FIXED_HEADER*)&sendbuf[0];
+        mlog_msgbyfunc(rtp_hdr,sizeof(*rtp_hdr), "print rtp_hdr");
 
         //设置RTP HEADER
         rtp_hdr->version = 2;   //版本号，此版本固定为2
@@ -266,10 +268,12 @@ int main()
             {
 
                 send(sockfd,sendbuf,bytes,0);//发送RTP包
+                mlog_msgbyfunc(sendbuf,bytes, "send buff, nal_unit_type is 1 or 5 less than:%u", MAX_RTP_PKT_LENGTH);
             }
             else
             {
                 send(sockfd,sendbuf,bytes,0);//发送RTP包
+                mlog_msgbyfunc(sendbuf,bytes, "send buff, nal_unit_type not 1 or 5 less than:%u", MAX_RTP_PKT_LENGTH);
                   //如果是6,7类型的包，不应该延时；之前有停顿，原因这在这
                  continue;
             }
@@ -306,7 +310,8 @@ int main()
             memcpy(&sendbuf[14],n->buf+1,MAX_RTP_PKT_LENGTH);//去掉NALU头
             bytes=MAX_RTP_PKT_LENGTH+14;//获得sendbuf的长度,为nalu的长度（除去起始前缀和NALU头）加上rtp_header，fu_ind，fu_hdr的固定长度14字节
             send( sockfd, sendbuf, bytes, 0 );//发送RTP包
-
+            mlog_msgbyfunc(sendbuf,bytes, "send buff, packetIndex:%d, bigger than:%u",
+                           packetIndex, MAX_RTP_PKT_LENGTH);
             //发送中间的FU，S=0，E=0，R=0
             for(packetIndex=2;packetIndex<packetNum;packetIndex++)
             {
@@ -330,6 +335,8 @@ int main()
                 memcpy(&sendbuf[14],n->buf+(packetIndex-1)*MAX_RTP_PKT_LENGTH+1,MAX_RTP_PKT_LENGTH);//去掉起始前缀的nalu剩余内容写入sendbuf[14]开始的字符串。
                 bytes=MAX_RTP_PKT_LENGTH+14;//获得sendbuf的长度,为nalu的长度（除去原NALU头）加上rtp_header，fu_ind，fu_hdr的固定长度14字节
                 send( sockfd, sendbuf, bytes, 0 );//发送rtp包
+                mlog_msgbyfunc(sendbuf,bytes, "send buff, packetIndex:%d, bigger than:%u",
+                               packetIndex, MAX_RTP_PKT_LENGTH);
             }
 
             //发送最后一个的FU，S=0，E=1，R=0

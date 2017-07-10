@@ -17,5 +17,6 @@ LIBS += -lWs2_32 -lpthread
 
 HEADERS += \
     mlog_init.h \
-    memorylog.h
+    memorylog.h \
+    h264.h
 
